@@ -12,7 +12,8 @@ import SwiftData
 struct personalcloudbackupApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            ApiDetails.self,
+            UserDetails.self
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
@@ -25,7 +26,9 @@ struct personalcloudbackupApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            NavigationStack{
+                HomeView()
+            }            
         }
         .modelContainer(sharedModelContainer)
     }

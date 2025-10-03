@@ -9,10 +9,29 @@ import Foundation
 import SwiftData
 
 @Model
-final class Item {
-    var timestamp: Date
+final class ApiDetails: Identifiable {
     
-    init(timestamp: Date) {
-        self.timestamp = timestamp
+    var url:String
+    
+    init(url: String) {
+        self.url = url
     }
+    
+}
+
+
+@Model
+final class UserDetails : Identifiable {
+    var username: String
+    var token: String
+    var authorities : [String]
+    
+    
+    init(username: String, token: String, authorities : [String]) {
+        self.username = username
+        self.token = token
+        self.authorities = authorities
+    }
+    
+    
 }

@@ -7,55 +7,86 @@
 
 import SwiftUI
 import SwiftData
+import Photos
+
+
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
-
-    var body: some View {
-        NavigationSplitView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
-                    }
-                }
-                .onDelete(perform: deleteItems)
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
+    
+    func requestPhotoLibraryAccess() {
+            PHPhotoLibrary.requestAuthorization { status in
+                switch status {
+                case .authorized, .limited:
+                    print("Access granted")
+                    self.fetchAllPhotosAsImages()
+                case .denied, .restricted, .notDetermined:
+                    print("Access denied")
+                @unknown default:
+                    break
                 }
             }
-        } detail: {
-            Text("Select an item")
+        }
+    
+    func fetchAllPhotos() {
+        let fetchOptions = PHFetchOptions()
+        fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+        
+        let allPhotos = PHAsset.fetchAssets(with: .image, options: fetchOptions)
+        
+        allPhotos.enumerateObjects { (asset, _, _) in
+            print("Photo asset: \(asset)")
         }
     }
 
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
+        
+        // Fetch all photos as assets and then images
+    private func fetchAllPhotosAsImages() {
+        let fetchOptions = PHFetchOptions()
+        fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+        
+        let allPhotos = PHAsset.fetchAssets(with: .image, options: fetchOptions)
+        let imageManager = PHImageManager.default()
+        
+        allPhotos.enumerateObjects { (asset, _, _) in
+            let targetSize = CGSize(width: 300, height: 300) // thumbnail size
+            let options = PHImageRequestOptions()
+            options.deliveryMode = .highQualityFormat
+            
+            imageManager.requestImage(for: asset,
+                                      targetSize: targetSize,
+                                      contentMode: .aspectFill,
+                                      options: options) { image, _ in
+                if let img = image {
+                    let pngData = img.pngData()
+                    let CGpoint = CGPoint(x: 10, y: 10)
+                    img.draw(at: CGpoint)
+                    print("📷 Got photo: \(String(describing: pngData))")
+                    // 👉 You can collect these images in an array or show them in a UICollectionView
+                }
             }
         }
     }
+    
+    
+
+            
+    
+    var body : some View{
+        VStack {
+            Text("Photos")
+            
+            Button("Request Access", action: requestPhotoLibraryAccess)
+            
+            Button("Log Photos", action: fetchAllPhotos)
+            
+            Button("Log Full Photos", action: fetchAllPhotosAsImages)
+        }
+    }
+
 }
 
 #Preview {
     ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
+        .modelContainer(for: ApiDetails.self, inMemory: true)
 }
