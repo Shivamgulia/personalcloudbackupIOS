@@ -13,6 +13,8 @@ struct MainView: View {
     
     @Query private var userDetails : [UserDetails]
     
+    private var photoUploadService = PhotoUploader()
+    
     
     var body: some View {
         if userDetails.count < 1 {
