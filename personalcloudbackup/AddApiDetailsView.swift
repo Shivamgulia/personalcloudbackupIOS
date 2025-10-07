@@ -39,7 +39,7 @@ struct AddApiDetailsView: View {
 //        checking API URL
         print("button tapped")
         urlError = false
-        apiService.getRequest(urlString: "\(apiUrl)/auth/health") { result in
+        apiService.getRequest(urlString: "\(apiUrl)/auth/health" , token : "") { result in
             switch result {
             case .success(let data):
                 print("GET Response:", String(data: data, encoding: .utf8) ?? "")

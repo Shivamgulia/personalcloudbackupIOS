@@ -80,7 +80,7 @@ struct LoginView: View {
         print("\(postBody)")
         print("Logging in with \(username), \(password)")
         
-        apiService.postRequest(urlString: "\(apiDetails[0].url)/api/auth/login", body: postBody) { result in
+        apiService.postRequest(urlString: "\(apiDetails[0].url)/api/auth/login", body: postBody, token : "") { result in
             switch result {
                 
                 case .failure(let error):

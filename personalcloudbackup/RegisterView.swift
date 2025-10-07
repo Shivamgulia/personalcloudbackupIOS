@@ -93,7 +93,7 @@ struct RegisterView: View {
         
         let postBody: [String: Any] = ["username": username, "password": password]
         
-        apiService.postRequest(urlString: "\(apiDetails[0].url)/api/auth/register", body: postBody) { result in
+        apiService.postRequest(urlString: "\(apiDetails[0].url)/api/auth/register", body: postBody, token : "") { result in
             switch result {
             case .success(let data):
                 print("POST Response:", String(data: data, encoding: .utf8) ?? "")

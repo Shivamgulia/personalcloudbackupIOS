@@ -13,7 +13,8 @@ struct personalcloudbackupApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             ApiDetails.self,
-            UserDetails.self
+            UserDetails.self,
+            UploadedPhotos.self
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

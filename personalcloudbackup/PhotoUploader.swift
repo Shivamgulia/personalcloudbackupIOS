@@ -3,16 +3,14 @@ import Photos
 import SwiftData
 
 class PhotoUploader {
-    @Environment(\.modelContext) private var modelContext
     
-    @Query private var photos: [UploadedPhotos]
-    @Query private var api : [ApiDetails]
+    private var apiService = ApiService()
 
     
     
 //    TODO Change this function to check for new photos and only upload new ones
     // Upload all photos
-    func uploadAllPhotos(device: String, token: String) {
+    func uploadAllPhotos(device: String, token: String, photos: [UploadedPhotos], apiUrl : String) {
         PHPhotoLibrary.requestAuthorization { status in
             if status == .authorized || status == .limited {
                 let fetchOptions = PHFetchOptions()
@@ -21,14 +19,15 @@ class PhotoUploader {
                 allPhotos.enumerateObjects { asset, index, _ in
                     if let fileName = self.getFileName(for: asset) {
                         print("File : \(fileName)")
-                        if !self.photos.contains(where: { $0.fileName == fileName }) {
+                        if !photos.contains(where: { $0.fileName == fileName }) {
 //                            self.requestImageData(for: asset) { data in
 //                                if let data = data {
 //                                    self.uploadPhoto(
 //                                        data: data,
 //                                        device: device,
 //                                        token: token,
-//                                        fileName: fileName
+//                                        fileName: fileName,
+//                                        apiUrl : apiUrl
 //                                    )
 //                                } else {
 //                                    print("❌ Failed to get image data for asset \(index + 1)")
@@ -62,8 +61,8 @@ class PhotoUploader {
     }
     
     // Upload single photo
-    private func uploadPhoto(data: Data, device: String, token: String, fileName: String) {
-            guard let url = URL(string: "http://your-server-url/api/v1/s3/upload") else { return }
+    private func uploadPhoto(data: Data, device: String, token: String, fileName: String, apiUrl: String) {
+            guard let url = URL(string: "\(apiUrl)/api/v1/s3/upload") else { return }
             
             var request = URLRequest(url: url)
             request.httpMethod = "POST"
@@ -104,4 +103,50 @@ class PhotoUploader {
                 }
             }.resume()
         }
+    
+    
+    func updatePhotosListFromApi(device: String, apiUrl : String, token : String) -> [[String : Any]] {
+        var page : Int = 0
+        var morePages : Bool = true
+        
+        var photos : [[String : Any]] = []
+        
+            apiService.getRequest(urlString: "\(apiUrl)/api/v1/photos?device=\(device)&page=\(page)", token : token, completion: { [self]
+                result in
+                switch result {
+                    
+                case .failure(let error):
+                    print("Error : \(error.localizedDescription)")
+                    morePages = false
+                    return
+                    
+                    
+                case .success(let data):
+                    if let jsonString = String(data: data, encoding: .utf8) {
+                        if let arr = apiService.convertJSONStringToArray(jsonString) {
+                            if arr.count < 1 {
+                                morePages = false
+                                return
+                            }
+                            photos += arr
+                            
+                        }
+                        else {
+                            morePages = false
+                        }
+                        
+                    }
+                    else {
+                        morePages = false
+                    }
+                }
+            }
+            )
+
+        return photos
+        
+        
+        
+    }
+    
 }
