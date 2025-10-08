@@ -20,19 +20,19 @@ class PhotoUploader {
                     if let fileName = self.getFileName(for: asset) {
                         print("File : \(fileName)")
                         if !photos.contains(where: { $0.fileName == fileName }) {
-//                            self.requestImageData(for: asset) { data in
-//                                if let data = data {
-//                                    self.uploadPhoto(
-//                                        data: data,
-//                                        device: device,
-//                                        token: token,
-//                                        fileName: fileName,
-//                                        apiUrl : apiUrl
-//                                    )
-//                                } else {
-//                                    print("❌ Failed to get image data for asset \(index + 1)")
-//                                }
-//                            }
+                            self.requestImageData(for: asset) { data in
+                                if let data = data {
+                                    self.uploadPhoto(
+                                        data: data,
+                                        device: device,
+                                        token: token,
+                                        fileName: fileName,
+                                        apiUrl : apiUrl
+                                    )
+                                } else {
+                                    print("❌ Failed to get image data for asset \(index + 1)")
+                                }
+                            }
                             print("File : \(fileName)")
                         }
                     }
@@ -105,48 +105,40 @@ class PhotoUploader {
         }
     
     
-    func updatePhotosListFromApi(device: String, apiUrl : String, token : String) -> [[String : Any]] {
-        var page : Int = 0
-        var morePages : Bool = true
+    func updatePhotosListFromApi(device: String, apiUrl : String, token : String, completion: @escaping (Result<[[String : Any]], Error>) -> Void)  {
+
         
         var photos : [[String : Any]] = []
         
-            apiService.getRequest(urlString: "\(apiUrl)/api/v1/photos?device=\(device)&page=\(page)", token : token, completion: { [self]
+             apiService.getRequest(urlString: "\(apiUrl)/api/v1/allphotos?device=\(device)", token : token, completion: { [self]
                 result in
                 switch result {
                     
                 case .failure(let error):
                     print("Error : \(error.localizedDescription)")
-                    morePages = false
+                    completion(.failure(error))
                     return
                     
                     
                 case .success(let data):
                     if let jsonString = String(data: data, encoding: .utf8) {
-                        if let arr = apiService.convertJSONStringToArray(jsonString) {
-                            if arr.count < 1 {
-                                morePages = false
-                                return
-                            }
-                            photos += arr
-                            
+                        if let arr = self.apiService.convertJSONStringToArray(jsonString) {
+                            photos = arr
+                            completion(.success(photos))
+                            return
                         }
                         else {
-                            morePages = false
+                            completion(.failure(Error.self as! Error))
                         }
-                        
                     }
                     else {
-                        morePages = false
+                        completion(.failure(Error.self as! Error))
                     }
                 }
             }
             )
-
-        return photos
-        
-        
-        
+        return
     }
+    
     
 }
